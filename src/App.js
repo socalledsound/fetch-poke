@@ -1,28 +1,66 @@
-import { useState, useEffect } from 'react';
+import { useReducer, useEffect } from 'react';
 import './App.css';
 
 const request = `https://pokeapi.co/api/v2/pokemon?limit=10`;
-const badRequest = `https://pokeapi.co/api/v10/pokemon?limit=10`;
+// const badRequest = `https://pokeapi.co/api/v10/pokemon?limit=10`;
+
+const initialState = {
+  isLoading: false,
+  data: null,
+  error: null,
+}
+
 
 function App() {
-  const [isLoading, setLoading] = useState(false); 
-  const [data, setData ] = useState(null);
-  const [error, setError] = useState(null); 
+  // const [isLoading, setLoading] = useState(false); 
+  // const [data, setData ] = useState(null);
+  // const [error, setError] = useState(null); 
+
+  const [state, dispatch ] = useReducer((state, action) => {
+    console.log(state, action);
+      switch(action.type){
+        case 'PENDING' :
+            return {
+              ...state,
+              isLoading: true
+            }
+        case 'FULFILLED' : 
+            return {
+              ...state,
+              isLoading: false,
+              data: action.payload
+            }
+        case 'REJECTED' : 
+            return {
+              ...state,
+              isLoading: false,
+              error: action.payload,
+            }
+        default : 
+            return state
+      }
+
+  }, initialState);
+
+
 
   useEffect(() => {
-    setLoading(true);
+    dispatch({type: 'PENDNG'})
     fetch(request)
       .then(response => response.json())
       .then(data => {
         setTimeout(() => {
-          setData(data);
-          setLoading(false);
+          dispatch({type: 'FULFILLED', payload: data})
         }, 5000)
           
         return null
       })
-      .catch(err => setError(err.toString()))
+      .catch(err => dispatch({type: 'REJECTED', payload: err.toString()}))
   }, [])
+
+  const { isLoading, data, error } = state;
+  console.log(isLoading)
+
 if(data){
   console.log(data.results)
 }
